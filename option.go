@@ -199,7 +199,7 @@ func WithSchema(schema any) Option {
 // server receives to construct the message to be unmarshaled into. The message
 // will be a non nil pointer to the type created by the handler. Use the Schema
 // field of the [Spec] to determine the type of the message.
-func WithRequestInitializer(initializer func(spec Spec, message any) error) HandlerOption {
+func WithRequestInitializer(initializer func(ctx context.Context, spec Spec, message any) error) HandlerOption {
 	return &initializerOption{Initializer: initializer}
 }
 
@@ -208,7 +208,7 @@ func WithRequestInitializer(initializer func(spec Spec, message any) error) Hand
 // client receives to construct the message to be unmarshaled into. The message
 // will be a non nil pointer to the type created by the client. Use the Schema
 // field of the [Spec] to determine the type of the message.
-func WithResponseInitializer(initializer func(spec Spec, message any) error) ClientOption {
+func WithResponseInitializer(initializer func(ctx context.Context, spec Spec, message any) error) ClientOption {
 	return &initializerOption{Initializer: initializer}
 }
 
@@ -369,7 +369,7 @@ func (o *schemaOption) applyToHandler(config *handlerConfig) {
 }
 
 type initializerOption struct {
-	Initializer func(spec Spec, message any) error
+	Initializer func(ctx context.Context, spec Spec, message any) error
 }
 
 func (o *initializerOption) applyToHandler(config *handlerConfig) {
@@ -381,12 +381,12 @@ func (o *initializerOption) applyToClient(config *clientConfig) {
 }
 
 type maybeInitializer struct {
-	initializer func(spec Spec, message any) error
+	initializer func(ctx context.Context, spec Spec, message any) error
 }
 
-func (o maybeInitializer) maybe(spec Spec, message any) error {
+func (o maybeInitializer) maybe(ctx context.Context, spec Spec, message any) error {
 	if o.initializer != nil {
-		return o.initializer(spec, message)
+		return o.initializer(ctx, spec, message)
 	}
 	return nil
 }
